@@ -46,9 +46,9 @@ class MainApp(QWidget):
         self.active_account = active_account
 
         my_icon = QIcon()
-        my_icon.addFile('swing.png') 
+        my_icon.addFile('fraction.png') 
         self.setWindowIcon(my_icon)
-        self.setWindowTitle("Python自動換股小幫手(教學範例，使用前請先了解相關內容)")
+        self.setWindowTitle("Python自動換股小幫手(教學範例，零股版)")
         self.resize(1200, 700)
 
         # 製作上下排列layout上為庫存表，下為log資訊
@@ -855,7 +855,7 @@ if __name__ == "__main__":
     else:
         app = QApplication.instance()
     app.setStyleSheet("QWidget{font-size: 12pt;}")
-    form = LoginForm(MainApp, sdk, 'swing.png')
+    form = LoginForm(MainApp, sdk, 'fraction.png')
     form.show()
     
     sys.exit(app.exec())
