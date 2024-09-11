@@ -48,7 +48,7 @@ class MainApp(QWidget):
         my_icon = QIcon()
         my_icon.addFile('fraction.png') 
         self.setWindowIcon(my_icon)
-        self.setWindowTitle("Python自動換股小幫手(教學範例，零股版)")
+        self.setWindowTitle("Python零股滿額配置小幫手(教學範例)")
         self.resize(1200, 700)
 
         # 製作上下排列layout上為庫存表，下為log資訊
@@ -67,7 +67,7 @@ class MainApp(QWidget):
         layout_table = QHBoxLayout()
         # 庫存表表頭
         self.cur_pos_header = ['股票名稱', '股票代號', '庫存股數', '庫存均價', '現價', '損益試算', '獲利率%', '委託數量', '委託價格', '成交數量', '成交價格']
-        self.new_pos_header = ['股票名稱', '股票代號', '現價', '委託數量', '委託價格', '成交數量', '成交價格']
+        self.new_pos_header = ['股票名稱', '股票代號', '現價', '目標股數', '委託數量', '委託價格', '成交數量', '成交價格']
         
         self.cur_pos_table = QTableWidget(0, len(self.cur_pos_header))
         self.cur_pos_table.setHorizontalHeaderLabels([f'{item}' for item in self.cur_pos_header])
@@ -670,6 +670,9 @@ class MainApp(QWidget):
                     elif self.new_pos_header[j] == '現價':
                         item.setText('-')
                         self.new_pos_table.setItem(row, j, item)
+                    elif self.new_pos_header[j] == '目標股數':
+                        item.setText('-')
+                        self.new_pos_table.setItem(row, j, item)
                     elif self.new_pos_header[j] == '委託數量':
                         item.setText('-')
                         self.new_pos_table.setItem(row, j, item)
@@ -742,7 +745,7 @@ class MainApp(QWidget):
                     self.print_log(symbol+'配置賣出: '+str(sell_qty)+' 非目標，預計賣出: '+str(sell_qty))
                 
                 if net_sell_qty > 0:
-                    self.cur_pos_table.item(row, self.cur_table_col_idx_map['委託數量']).setText(str(int(sell_qty)))
+                    self.cur_pos_table.item(row, self.cur_table_col_idx_map['委託數量']).setText(str(int(net_sell_qty)))
                     est_sell_total += math.ceil(net_sell_qty*order_price)
                     est_sell_profit += int(round(net_sell_qty*(order_price-avg_price), 0))
                 else:
@@ -789,6 +792,7 @@ class MainApp(QWidget):
                 else:
                     self.print_log(symbol+' 目標買入: '+str(order_qty)+' 新增部位，預計買入: '+str(order_qty)+'，整股:'+str(whole_qty)+'，零股:'+str(frac_qty))
                 
+                self.new_pos_table.item(row, self.new_table_col_idx_map['目標股數']).setText(str(int(order_qty)))
                 if net_order_qty > 0:
                     self.new_pos_table.item(row, self.new_table_col_idx_map['委託數量']).setText(str(int(net_order_qty)))
                     est_buy_total += math.ceil(net_order_qty*order_price)
