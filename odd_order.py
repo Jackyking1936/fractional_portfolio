@@ -30,3 +30,5 @@ order = Order(
 )
 
 order_res = sdk.stock.place_order(active_acc, order)
+
+# %%

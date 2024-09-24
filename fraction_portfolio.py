@@ -410,29 +410,34 @@ class MainApp(QWidget):
 
     # 主動回報，根據成交數據維護GUI表格及cur_host_table
     def on_filled(self, err, content):
+        print("hold pos:", self.hold_pos_dict)
         print('filled recived:', content.stock_no, content.buy_sell)
         print('content:', content)
         if content.account == self.active_account.account:
             if content.user_def == self.buy_h_def or content.user_def == self.buy_f_def:
                 row = self.new_table_row_idx_map[content.stock_no]
                 cur_filled_qty = self.new_pos_table.item(row, self.new_table_col_idx_map['成交數量']).text()
-                update_qty = content.filled_qty
+                new_filled_qty = content.filled_qty
+                update_qty = 0
                 avg_filled_price = content.filled_avg_price
+                cur_filled_price = content.filled_price
                 self.buy_exe_filled_amount += int(round((content.filled_qty*content.filled_price),0))
 
                 if cur_filled_qty != '-':
                     if int(cur_filled_qty) > 0:
-                        update_qty += int(cur_filled_qty)
+                        update_qty = int(cur_filled_qty)+new_filled_qty
+                else:
+                    update_qty = new_filled_qty
                 
                 stock_name = self.new_pos_table.item(row, self.new_table_col_idx_map['股票名稱']).text()
                 if content.stock_no in self.hold_pos_dict:
                     pos_record = self.hold_pos_dict[content.stock_no]
-                    pos_record['hold_qty'] += content.filled_qty
-                    pos_record['avg_price'] = ((pos_record['avg_price']*pos_record['hold_qty'])+(content.filled_qty*avg_filled_price))/(pos_record['hold_qty']+update_qty)
+                    pos_record['avg_price'] = ((pos_record['avg_price']*pos_record['hold_qty'])+(cur_filled_price*new_filled_qty))/(pos_record['hold_qty']+new_filled_qty)
                     pos_record['avg_price'] = round(pos_record['avg_price']+self.epsilon, 2)
+                    pos_record['hold_qty'] = pos_record['hold_qty']+new_filled_qty
                     self.hold_pos_dict[content.stock_no] = pos_record
                 else:
-                    pos_record = {'stock_name': stock_name, 'hold_qty': update_qty, 'avg_price': avg_filled_price}
+                    pos_record = {'stock_name': stock_name, 'hold_qty': new_filled_qty, 'avg_price': avg_filled_price}
                     self.hold_pos_dict[content.stock_no] = pos_record
 
                 self.communicator.new_table_item_update_signal.emit(row, self.new_table_col_idx_map['成交數量'], str(update_qty))
@@ -442,7 +447,8 @@ class MainApp(QWidget):
             elif content.user_def == self.sell_h_def or content.user_def == self.sell_f_def:
                 row = self.cur_table_row_idx_map[content.stock_no]
                 cur_filled_qty = self.cur_pos_table.item(row, self.cur_table_col_idx_map['成交數量']).text()
-                update_qty = content.filled_qty
+                update_qty = 0
+                new_filled_qty = content.filled_qty
                 avg_filled_price = content.filled_avg_price
                 self.sell_exe_filled_amount += int(round((content.filled_qty*content.filled_price),0))
                 avg_pos_price = float(self.cur_pos_table.item(row, self.cur_table_col_idx_map['庫存均價']).text())
@@ -450,12 +456,14 @@ class MainApp(QWidget):
 
                 if cur_filled_qty != '-':
                     if int(cur_filled_qty) > 0:
-                        update_qty += int(cur_filled_qty)
+                        update_qty = int(cur_filled_qty)+new_filled_qty
+                else:
+                    update_qty = new_filled_qty
                 
                 stock_name = self.cur_pos_table.item(row, self.cur_table_col_idx_map['股票名稱']).text()
                 if content.stock_no in self.hold_pos_dict:
                     pos_record = self.hold_pos_dict[content.stock_no]
-                    pos_record['hold_qty'] -= content.filled_qty
+                    pos_record['hold_qty'] = pos_record['hold_qty'] - new_filled_qty
                     if pos_record['hold_qty'] > 0:
                         self.hold_pos_dict[content.stock_no] = pos_record
                     else:
